@@ -12,17 +12,20 @@ const USERS = [
   { name: "Test Clinician",  email: "clinician@coreprescribing.co.uk",  password: "Clinician@123",   role: "clinician"   },
 ];
 
-
-
 (async () => {
   await mongoose.connect(process.env.MONGODB_URI);
-  console.log("✅ MongoDB connected");
+  console.log(" MongoDB connected");
+
   for (const u of USERS) {
-    const exists = await User.findOne({ email: u.email });
-    if (exists) { console.log(`⚠️  Exists: ${u.email}`); continue; }
-    await User.create(u);
-    console.log(`✅ Created: ${u.email} [${u.role}]`);
+    // Upsert: update karo agar exists hai, warna create karo
+    await User.findOneAndUpdate(
+      { email: u.email },
+      u,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    console.log(` Seeded: ${u.email} [${u.role}]`);
   }
+
   await mongoose.disconnect();
-  console.log("🎉 Seed complete!");
+  console.log(" Seed complete!");
 })();
